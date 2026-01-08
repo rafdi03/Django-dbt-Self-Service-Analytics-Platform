@@ -1,127 +1,142 @@
-# Django-dbt Self-Service Analytics Platform
 
-Platform self-service analytics yang menggabungkan Django untuk data ingestion dan dbt untuk data transformation.
 
-## 🚀 Fitur
 
-- **CSV Upload**: Upload file CSV melalui web interface
-- **Automatic dbt Processing**: Data otomatis diproses menggunakan dbt setelah upload
-- **Async Pipeline**: dbt berjalan di background thread (non-blocking)
-- **Pipeline Logging**: Semua dbt run disimpan ke database untuk tracking
-- **Re-run Pipeline**: Button untuk menjalankan ulang pipeline
-- **Achievement Metrics**: Dashboard metrics untuk monitoring
-- **Real-time Status**: Auto-refresh status pipeline
+# 🚀 Django-dbt Self-Service Analytics Platform
 
-## 📋 Prerequisites
+![Python](https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-4.0+-092E20?style=for-the-badge&logo=django&logoColor=white)
+![dbt](https://img.shields.io/badge/dbt-Core-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 
-- Docker & Docker Compose
-- Git
+## 📋 Overview
 
-## 🛠️ Installation
+**Django-dbt Platform** is an end-to-end **Data Engineering & Web Application** solution designed to bridge the gap between manual data entry and automated analytics.
 
-1. Clone repository:
+This project solves a common business problem: **"Shadow IT" data** (e.g., sales targets, offline budgets) living in Excel/CSV files. This platform allows business users to upload CSVs via a user-friendly Web UI, which automatically triggers **dbt (data build tool)** pipelines to ingest, clean, and transform the data into analytics-ready models in PostgreSQL.
+
+It demonstrates a convergence of **Software Engineering (Django)** and **Analytics Engineering (dbt)** wrapped in a fully containerized **Docker** environment.
+
+---
+
+## 🏗️ System Architecture
+
+The system uses an event-driven approach where a user action (upload) directly orchestrates the data transformation pipeline.
+
+```mermaid
+graph LR
+    User[Business User] -->|Uploads CSV| WebUI[Django Web App]
+    WebUI -->|Pandas Processing| DB_Raw[(PostgreSQL - Raw)]
+    WebUI -->|Triggers| DBT[dbt Core]
+    DBT -->|Reads Raw Data| DB_Raw
+    DBT -->|Transforms & Materializes| DB_Marts[(PostgreSQL - Marts)]
+    DB_Marts -->|Clean Data| BI[BI Dashboard / Analytics]
+
+```
+
+---
+
+## ✨ Key Features
+
+* **Self-Service Data Ingestion:** Custom-built UI for non-technical users to upload structured data (CSV).
+* **Automated ELT Pipeline:** Automatically triggers `dbt run` immediately after a successful upload using Python integration.
+* **Data Validation:** Uses Pandas to parse and validate CSV structure before database insertion.
+* **Containerized Infrastructure:** The entire stack (Web, DB, Transformation logic) runs on Docker Compose for portability and reproducibility.
+* **Auditability:** Tracks upload history and transformation status via Django Admin.
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology | Description |
+| --- | --- | --- |
+| **Orchestration & Web** | **Django (Python)** | Handles HTTP requests, file processing, and orchestrates dbt commands. |
+| **Transformation** | **dbt-core** | Compiles and runs SQL transformation logic (ELT). |
+| **Database** | **PostgreSQL** | Stores both `raw` (staging) and `marts` (production) tables. |
+| **Data Processing** | **Pandas** | Used for efficient CSV parsing and pre-validation. |
+| **Infrastructure** | **Docker & Compose** | Ensures consistent environment across dev and production. |
+
+---
+
+## 📂 Project Structure
+
 ```bash
-git clone <your-repo-url>
-cd django_dbt_platform
-```
-
-2. Copy environment file:
-```bash
-cp .env.example .env
-```
-
-3. Edit `.env` file dan isi dengan credentials Anda
-
-4. Build dan jalankan dengan Docker:
-```bash
-docker-compose up -d
-```
-
-5. Buat migration (jika diperlukan):
-```bash
-docker-compose exec web python django_app/manage.py makemigrations
-docker-compose exec web python django_app/manage.py migrate
-```
-
-6. Buat superuser (optional):
-```bash
-docker-compose exec web python django_app/manage.py createsuperuser
-```
-
-## 🌐 Access
-
-- **Django App**: http://localhost:8000
-- **Upload Page**: http://localhost:8000/upload/
-- **Admin Panel**: http://localhost:8000/admin/
-- **PgAdmin**: http://localhost:5050
-
-## 📁 Project Structure
-
-```
 django_dbt_platform/
-├── django_app/              # Django application
-│   ├── config/              # Django settings
-│   └── uploads/             # Upload app
-│       ├── models.py        # Database models
-│       ├── views.py         # Views & dbt integration
-│       └── templates/       # HTML templates
-├── dbt_project/             # dbt project files
-│   └── models/              # dbt models
-├── dbt_profiles/            # dbt profiles configuration
-├── docker-compose.yml       # Docker configuration
-├── Dockerfile              # Docker image definition
-└── requirements.txt        # Python dependencies
+├── dbt_project/              # The dbt transformation logic & SQL models
+│   ├── models/
+│   │   ├── staging/          # Raw data cleaning
+│   │   └── marts/            # Business logic tables
+│   └── dbt_project.yml
+├── platform_app/             # Django Application Logic
+│   ├── views.py              # Logic: Upload -> Pandas -> DB -> dbt Trigger
+│   ├── models.py             # Database schema definition
+│   └── templates/            # HTML Frontend UI
+├── docker-compose.yml        # Container orchestration config
+├── Dockerfile                # Custom image definition
+└── requirements.txt          # Python dependencies
+
 ```
 
-## 🔧 Configuration
+---
 
-### Database
-Database PostgreSQL dikonfigurasi melalui environment variables di `.env` atau `docker-compose.yml`.
+## 🚀 Getting Started
 
-### dbt Configuration
-dbt profiles ada di `dbt_profiles/profiles.yml`. Pastikan environment variables sudah di-set dengan benar.
+Follow these steps to run the project locally.
 
-## 📊 Usage
+### Prerequisites
 
-1. **Upload CSV**: 
-   - Buka http://localhost:8000/upload/
-   - Upload file CSV dengan kolom `order_delivered_carrier_date`
-   - Data akan otomatis disimpan dan dbt pipeline akan berjalan
+* **Docker** & **Docker Compose** installed.
+* **Git** installed.
 
-2. **Monitor Pipeline**:
-   - Status pipeline ditampilkan di halaman upload
-   - Klik "Re-run Pipeline" untuk menjalankan ulang
-   - Lihat metrics di Achievement Metrics card
+### Installation & Run
 
-3. **View Data**:
-   - Raw data: Tabel `raw_user_targets`
-   - Processed data: Tabel `user_targets_clean` (hasil dbt)
-   - Pipeline logs: Tabel `dbt_run_logs`
+1. **Clone the repository**
+```bash
+git clone [https://github.com/YOUR_USERNAME/django-dbt-platform.git](https://github.com/YOUR_USERNAME/django-dbt-platform.git)
+cd django_dbt_platform
 
-## 🗄️ Database Tables
+```
 
-- `raw_user_targets`: Data mentah dari CSV upload
-- `user_targets_clean`: Data hasil transformasi dbt
-- `dbt_run_logs`: Log semua dbt run
 
-## 🛡️ Security Notes
+2. **Build and Run Containers**
+```bash
+docker-compose up --build
 
-⚠️ **PENTING**: Sebelum push ke production:
-- Ganti semua password di `.env`
-- Set `DEBUG=False` di production
-- Gunakan secret key yang aman
-- Jangan commit file `.env` ke Git
+```
 
-## 📝 License
 
-MIT License
+3. **Access the Platform**
+* **Upload Interface:** [http://localhost:8000/upload/](https://www.google.com/search?q=http://localhost:8000/upload/)
+* **Django Admin:** [http://localhost:8000/admin/](https://www.google.com/search?q=http://localhost:8000/admin/)
 
-## 👤 Author
 
-Your Name
+4. **How to Test**
+1. Open the **Upload Interface**.
+2. Select a CSV file (ensure it contains `order_delivered_carrier_date` and `customer_id`).
+3. Click **Upload & Proses**.
+4. Check your terminal/logs to see dbt running automatically!
 
-## 🙏 Acknowledgments
 
-- Django
-- dbt (data build tool)
-- PostgreSQL
+
+---
+
+## 💡 Why This Project Matters?
+
+In many organizations, Data Engineers spend too much time manually loading Excel files sent by stakeholders. This project proves capability in:
+
+1. **Automation:** Eliminating manual ETL work.
+2. **Tool Integration:** Seamlessly connecting Python application logic with SQL-based dbt workflows.
+3. **User Empathy:** Building tools that empower business users while maintaining data engineering standards.
+
+---
+
+## 🔮 Future Improvements
+
+* [ ] Implement **Celery & Redis** for asynchronous task processing (handling large files without blocking the UI).
+* [ ] Add **dbt tests** to block bad data entry automatically.
+* [ ] Create a visualized dashboard using **Metabase** or **Superset** connected to the Postgres container.
+
+---
+
+
+

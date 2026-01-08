@@ -28,7 +28,7 @@ graph LR
     User[Business User] -->|Uploads CSV| WebUI[Django Web App]
     WebUI -->|Pandas Processing| DB_Raw[(PostgreSQL - Raw)]
     WebUI -->|Triggers| DBT[dbt Core]
-    DBT -->|Reads Raw Data| DB_Raw| 
+    DBT -->|Reads Raw Data| DB_Raw
     DBT -->|Transforms & Materializes| DB_Marts[(PostgreSQL - Marts)]
     DB_Marts -->|Clean Data| BI[BI Dashboard / Analytics]
 

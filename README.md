@@ -121,6 +121,7 @@ docker-compose up --build
 ---
 
 ## 💡 Why This Project Matters?
+<img width="1908" height="1984" alt="screencapture-localhost-8000-upload-2026-01-08-18_18_14" src="https://github.com/user-attachments/assets/a88dc192-599b-45af-b0d3-d27fb48f1b49" />
 
 In many organizations, Data Engineers spend too much time manually loading Excel files sent by stakeholders. This project proves capability in:
 

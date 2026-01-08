@@ -1,0 +1,19 @@
+name: 'django_dbt_platform'
+version: '1.0.0'
+
+profile: 'analytics_db'
+
+model-paths: ["dbt_project/models"]
+analysis-paths: ["dbt_project/analyses"]
+test-paths: ["dbt_project/tests"]
+seed-paths: ["dbt_project/seeds"]
+macro-paths: ["dbt_project/macros"]
+snapshot-paths: ["dbt_project/snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  django_dbt_platform:
+    +materialized: table

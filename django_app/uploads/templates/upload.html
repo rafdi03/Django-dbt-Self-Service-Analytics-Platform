@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Data Penjualan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --success-bg: #ecfdf5;
+            --success-text: #065f46;
+            --error-bg: #fef2f2;
+            --error-text: #991b1b;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--gray-100);
+            padding: 40px 20px;
+            color: var(--gray-700);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* CARD STYLE */
+        .card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .header { text-align: center; margin-bottom: 2rem; }
+        .header h2 { font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+        .header p { color: #6b7280; font-size: 0.875rem; }
+
+        /* ALERT */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .alert.success { background-color: var(--success-bg); color: var(--success-text); border: 1px solid #a7f3d0; }
+        .alert.error { background-color: var(--error-bg); color: var(--error-text); border: 1px solid #fecaca; }
+
+        /* UPLOAD FORM */
+        .file-drop-area {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 2rem; border: 2px dashed var(--gray-200); border-radius: 12px;
+            cursor: pointer; background-color: #f9fafb; transition: 0.2s; position: relative;
+        }
+        .file-drop-area:hover { border-color: var(--primary-color); background-color: #eef2ff; }
+        
+        .file-input { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .fake-btn { background: white; border: 1px solid var(--gray-200); padding: 8px 16px; border-radius: 6px; font-weight: 500; margin-top: 10px; }
+        
+        .btn-submit {
+            width: 100%; padding: 0.875rem; background-color: var(--primary-color);
+            color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+            margin-top: 1.5rem; transition: 0.2s;
+        }
+        .btn-submit:hover { background-color: var(--primary-hover); }
+
+        /* REPORT SECTION STYLES */
+        .report-header {
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .report-title { font-size: 1.1rem; font-weight: 600; color: var(--gray-800); }
+        
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .meta-item {
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+        }
+        .meta-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .meta-value { font-size: 1rem; font-weight: 600; color: var(--gray-800); font-family: 'Courier New', monospace; }
+
+        /* DATA TABLE STYLE */
+        .table-wrapper { overflow-x: auto; border: 1px solid var(--gray-200); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; text-align: left; }
+        thead { background-color: #f1f5f9; }
+        th { padding: 12px 16px; font-weight: 600; color: #475569; border-bottom: 1px solid var(--gray-200); white-space: nowrap; }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--gray-200); color: #334155; }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        
+        .badge {
+            display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;
+            background-color: #e0e7ff; color: #4338ca;
+        }
+
+        .selected-file-name { display: none; margin-top: 10px; font-weight: 600; color: var(--primary-color); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="card">
+        <div class="header">
+            <h2>Upload Data Penjualan</h2>
+            <p>Sistem Data Ingestion CSV</p>
+        </div>
+
+        {% if message %}
+            {% if message_type == 'error' %}
+            <div class="alert error">
+                <span>{{ message }}</span>
+            </div>
+            {% elif message_type == 'success' and not preview_data %}
+            <div class="alert success">
+                <span>{{ message }}</span>
+            </div>
+            {% endif %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="file-drop-area" id="drop-area">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span style="margin-top: 10px; color: #6b7280; font-size: 0.9rem;">Drag & drop file CSV di sini</span>
+                <span class="fake-btn">Pilih File</span>
+                <input class="file-input" type="file" name="file" id="file" accept=".csv" required onchange="updateFileName(this)">
+                <div id="file-name-display" class="selected-file-name"></div>
+            </div>
+            <button type="submit" class="btn-submit">Upload & Proses</button>
+        </form>
+    </div>
+
+    {% if preview_data %}
+    <div class="card">
+        <div class="report-header">
+            <span class="report-title">✅ Laporan Hasil Upload</span>
+            <span class="badge">Success</span>
+        </div>
+
+        <div class="alert success">
+            {{ message }}
+        </div>
+
+        <div class="meta-grid">
+            <div class="meta-item">
+                <div class="meta-label">Target Database Table</div>
+                <div class="meta-value">{{ table_name }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Total Data Diproses</div>
+                <div class="meta-value">{{ total_rows }} Baris</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Waktu Proses</div>
+                <div class="meta-value">{% now "H:i:s" %}</div>
+            </div>
+        </div>
+
+        {% if latest_dbt_log %}
+        <div id="dbt-status-container" style="margin-top: 1.5rem; padding: 1rem; background-color: {% if latest_dbt_log.status == 'success' %}#ecfdf5{% elif latest_dbt_log.status == 'failed' %}#fef2f2{% else %}#fef3c7{% endif %}; border-radius: 8px; border: 1px solid {% if latest_dbt_log.status == 'success' %}#a7f3d0{% elif latest_dbt_log.status == 'failed' %}#fecaca{% else %}#fde68a{% endif %};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <strong style="color: {% if latest_dbt_log.status == 'success' %}#065f46{% elif latest_dbt_log.status == 'failed' %}#991b1b{% else %}#92400e{% endif %};">
+                        {% if latest_dbt_log.status == 'success' %}✓{% elif latest_dbt_log.status == 'failed' %}✗{% else %}⏳{% endif %} 
+                        dbt Pipeline Status:
+                    </strong>
+                    <span id="dbt-status-text" style="color: {% if latest_dbt_log.status == 'success' %}#065f46{% elif latest_dbt_log.status == 'failed' %}#991b1b{% else %}#92400e{% endif %};">
+                        {{ latest_dbt_log.get_status_display }}
+                    </span>
+                </div>
+                <button id="rerun-btn" onclick="rerunPipeline()" style="padding: 0.5rem 1rem; background-color: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.875rem;">
+                    🔄 Re-run Pipeline
+                </button>
+            </div>
+            {% if latest_dbt_log.duration_seconds %}
+            <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">
+                Duration: {{ latest_dbt_log.duration_seconds|floatformat:2 }}s | 
+                Started: {{ latest_dbt_log.started_at|date:"Y-m-d H:i:s" }}
+            </div>
+            {% endif %}
+            {% if latest_dbt_log.output %}
+            <details style="margin-top: 0.5rem;">
+                <summary style="cursor: pointer; color: #6b7280; font-size: 0.875rem;">Lihat Output dbt</summary>
+                <pre style="margin-top: 0.5rem; padding: 0.75rem; background-color: white; border-radius: 4px; font-size: 0.75rem; overflow-x: auto; max-height: 200px; overflow-y: auto;">{{ latest_dbt_log.output }}</pre>
+            </details>
+            {% endif %}
+            {% if latest_dbt_log.error %}
+            <details style="margin-top: 0.5rem;">
+                <summary style="cursor: pointer; color: #991b1b; font-size: 0.875rem;">Lihat Error</summary>
+                <pre style="margin-top: 0.5rem; padding: 0.75rem; background-color: white; border-radius: 4px; font-size: 0.75rem; overflow-x: auto; max-height: 200px; overflow-y: auto; color: #991b1b;">{{ latest_dbt_log.error }}</pre>
+            </details>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <h4 style="margin-bottom: 1rem; font-weight: 600; font-size: 0.95rem;">Sampel Data Masuk (Head 5):</h4>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        {% for col in preview_columns %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in preview_data %}
+                    <tr>
+                        {% for col, val in row.items %}
+                        <td>{{ val }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p style="margin-top: 1rem; font-size: 0.75rem; color: #9ca3af; text-align: right;">
+            *Menampilkan 5 baris pertama dari file CSV yang berhasil diparsing.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Achievement Metrics Card -->
+    {% if metrics %}
+    <div class="card">
+        <div class="report-header">
+            <span class="report-title">📊 Achievement Metrics</span>
+        </div>
+        
+        <div class="meta-grid">
+            <div class="meta-item">
+                <div class="meta-label">Total Data Uploaded</div>
+                <div class="meta-value">{{ metrics.total_uploads }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Total Processed by dbt</div>
+                <div class="meta-value">{{ metrics.total_processed }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Pipeline Success Rate</div>
+                <div class="meta-value">{{ metrics.success_rate }}%</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Total Pipeline Runs</div>
+                <div class="meta-value">{{ metrics.total_runs }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Successful Runs</div>
+                <div class="meta-value">{{ metrics.success_count }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Latest Status</div>
+                <div class="meta-value">
+                    {% if metrics.latest_status == 'success' %}✓ Success
+                    {% elif metrics.latest_status == 'failed' %}✗ Failed
+                    {% elif metrics.latest_status == 'running' %}⏳ Running
+                    {% else %}{{ metrics.latest_status }}{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    function updateFileName(input) {
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const dropArea = document.getElementById('drop-area');
+        const fakeBtn = document.querySelector('.fake-btn');
+
+        if (input.files && input.files[0]) {
+            fileNameDisplay.textContent = input.files[0].name;
+            fileNameDisplay.style.display = 'block';
+            dropArea.style.borderColor = '#4f46e5';
+            dropArea.style.backgroundColor = '#eef2ff';
+            fakeBtn.textContent = 'Ganti File';
+        }
+    }
+
+    function rerunPipeline() {
+        const btn = document.getElementById('rerun-btn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Running...';
+        
+        fetch('/api/rerun-pipeline/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Start polling for status
+                pollDbtStatus(data.log_id);
+            } else {
+                alert('Error: ' + data.message);
+                btn.disabled = false;
+                btn.textContent = '🔄 Re-run Pipeline';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error re-running pipeline');
+            btn.disabled = false;
+            btn.textContent = '🔄 Re-run Pipeline';
+        });
+    }
+
+    function pollDbtStatus(logId) {
+        const statusText = document.getElementById('dbt-status-text');
+        const statusContainer = document.getElementById('dbt-status-container');
+        
+        const poll = setInterval(() => {
+            fetch(`/api/dbt-status/${logId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    statusText.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+                    
+                    // Update colors based on status
+                    if (data.status === 'success') {
+                        statusContainer.style.backgroundColor = '#ecfdf5';
+                        statusContainer.style.borderColor = '#a7f3d0';
+                        statusText.style.color = '#065f46';
+                        clearInterval(poll);
+                        location.reload(); // Reload to show updated data
+                    } else if (data.status === 'failed') {
+                        statusContainer.style.backgroundColor = '#fef2f2';
+                        statusContainer.style.borderColor = '#fecaca';
+                        statusText.style.color = '#991b1b';
+                        clearInterval(poll);
+                        location.reload();
+                    } else if (data.status === 'running' || data.status === 'pending') {
+                        statusContainer.style.backgroundColor = '#fef3c7';
+                        statusContainer.style.borderColor = '#fde68a';
+                        statusText.style.color = '#92400e';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling status:', error);
+                    clearInterval(poll);
+                });
+        }, 2000); // Poll every 2 seconds
+        
+        // Stop polling after 5 minutes
+        setTimeout(() => clearInterval(poll), 300000);
+    }
+
+    // Auto-poll if latest log is running
+    {% if latest_dbt_log and latest_dbt_log.status == 'running' or latest_dbt_log.status == 'pending' %}
+    pollDbtStatus({{ latest_dbt_log.id }});
+    {% endif %}
+</script>
+
+</body>
+</html>

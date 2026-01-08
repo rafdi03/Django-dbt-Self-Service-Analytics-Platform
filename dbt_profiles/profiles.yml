@@ -1,0 +1,12 @@
+analytics_db:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', 'db') }}"
+      user: "{{ env_var('DBT_USER', 'user_db') }}"
+      password: "{{ env_var('DBT_PASS', 'Aryaguna2022') }}"
+      port: "{{ env_var('DBT_PORT', '5432') | as_number }}"
+      dbname: "{{ env_var('DBT_DB', 'analytics_db') }}"
+      schema: public
+      threads: 4

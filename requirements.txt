@@ -1,0 +1,7 @@
+django
+psycopg2-binary
+pandas
+dbt-core
+dbt-postgres
+django-environ
+gunicorn
